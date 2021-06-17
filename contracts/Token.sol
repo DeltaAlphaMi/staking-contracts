@@ -2,24 +2,21 @@
 pragma solidity 0.8.5;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
 
-contract Token is ERC20, Ownable {
-  address public minter;
+contract Token is ERC20, AccessControl {
+  bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
-  event MinterChanged(address indexed from, address to);
-
-  constructor() ERC20("My Token","MTK") {
-    minter = msg.sender;
+  constructor(address minter) ERC20("Token","TKN") {
+    _setupRole(MINTER_ROLE, minter);
   }
 
-  function passMinterRole(address stakingContract) public onlyOwner() {
-    minter = stakingContract;
-        
-    emit MinterChanged(msg.sender, stakingContract);
-  }
-
-  function mint(address account, uint256 amount) public onlyOwner() {
-    _mint(account, amount);
+  /**
+   * @notice Allow the minter to mint tokens
+   * @param to Address that will receive the minted tokens
+   * @param amount Amount of tokens that will be minted
+   */
+  function mint(address to, uint256 amount) public onlyRole(MINTER_ROLE) {
+    _mint(to, amount);
   }
 }
